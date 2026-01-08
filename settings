@@ -1,0 +1,309 @@
+#!/bin/bash
+#═══════════════════════════════════════════════════════════════════════════════
+# Settings - Quick launcher for installed system tools
+#═══════════════════════════════════════════════════════════════════════════════
+
+launch() {
+    nohup "$1" &>/dev/null &
+    sleep 0.3
+}
+
+#═══════════════════════════════════════════════════════════════════════════════
+# CATEGORY MENUS
+#═══════════════════════════════════════════════════════════════════════════════
+
+menu_system() {
+    local items=()
+    command -v gnome-control-center &>/dev/null && items+=("gnome-control-center" "GNOME Settings")
+    command -v dconf-editor &>/dev/null && items+=("dconf-editor" "DConf Editor")
+    command -v gnome-tweaks &>/dev/null && items+=("gnome-tweaks" "GNOME Tweaks")
+    command -v lxqt-config &>/dev/null && items+=("lxqt-config" "LXQt Config")
+
+    [ ${#items[@]} -eq 0 ] && return
+    local choice=$(whiptail --title "System Settings" --menu "" 14 50 6 "${items[@]}" 3>&1 1>&2 2>&3)
+    [ -n "$choice" ] && launch "$choice"
+}
+
+menu_display() {
+    local items=()
+    command -v arandr &>/dev/null && items+=("arandr" "Display Configuration")
+    command -v nvidia-settings &>/dev/null && items+=("nvidia-settings" "NVIDIA Settings")
+    command -v lxrandr &>/dev/null && items+=("lxrandr" "LXRandR")
+    command -v redshift-gtk &>/dev/null && items+=("redshift-gtk" "Redshift")
+
+    [ ${#items[@]} -eq 0 ] && return
+    local choice=$(whiptail --title "Display & Graphics" --menu "" 14 50 6 "${items[@]}" 3>&1 1>&2 2>&3)
+    [ -n "$choice" ] && launch "$choice"
+}
+
+menu_network() {
+    local items=()
+    command -v nm-connection-editor &>/dev/null && items+=("nm-connection-editor" "Network Connections")
+    command -v blueman-manager &>/dev/null && items+=("blueman-manager" "Bluetooth")
+    command -v wireshark &>/dev/null && items+=("wireshark" "Wireshark")
+    command -v firewall-config &>/dev/null && items+=("firewall-config" "Firewall")
+
+    [ ${#items[@]} -eq 0 ] && return
+    local choice=$(whiptail --title "Network & Internet" --menu "" 14 50 6 "${items[@]}" 3>&1 1>&2 2>&3)
+    [ -n "$choice" ] && launch "$choice"
+}
+
+menu_audio() {
+    local items=()
+    command -v pavucontrol &>/dev/null && items+=("pavucontrol" "Volume Control")
+    command -v qpwgraph &>/dev/null && items+=("qpwgraph" "PipeWire Graph")
+    command -v easyeffects &>/dev/null && items+=("easyeffects" "Easy Effects")
+    command -v audacity &>/dev/null && items+=("audacity" "Audacity")
+    command -v vlc &>/dev/null && items+=("vlc" "VLC Player")
+    command -v obs-studio &>/dev/null && items+=("obs-studio" "OBS Studio")
+
+    [ ${#items[@]} -eq 0 ] && return
+    local choice=$(whiptail --title "Audio & Video" --menu "" 16 50 8 "${items[@]}" 3>&1 1>&2 2>&3)
+    [ -n "$choice" ] && launch "$choice"
+}
+
+menu_power() {
+    local items=()
+    command -v xfce4-power-manager-settings &>/dev/null && items+=("xfce4-power-manager-settings" "Power Manager")
+
+    [ ${#items[@]} -eq 0 ] && return
+    local choice=$(whiptail --title "Power & Battery" --menu "" 12 50 4 "${items[@]}" 3>&1 1>&2 2>&3)
+    [ -n "$choice" ] && launch "$choice"
+}
+
+menu_appearance() {
+    local items=()
+    command -v lxappearance &>/dev/null && items+=("lxappearance" "GTK Appearance")
+    command -v qt5ct &>/dev/null && items+=("qt5ct" "Qt5 Settings")
+    command -v nitrogen &>/dev/null && items+=("nitrogen" "Wallpaper")
+    command -v variety &>/dev/null && items+=("variety" "Variety")
+    command -v kvantum-manager &>/dev/null && items+=("kvantum-manager" "Kvantum")
+
+    [ ${#items[@]} -eq 0 ] && return
+    local choice=$(whiptail --title "Appearance & Themes" --menu "" 14 50 6 "${items[@]}" 3>&1 1>&2 2>&3)
+    [ -n "$choice" ] && launch "$choice"
+}
+
+menu_files() {
+    local items=()
+    command -v thunar &>/dev/null && items+=("thunar" "Thunar")
+    command -v nautilus &>/dev/null && items+=("nautilus" "Files")
+    command -v gnome-disks &>/dev/null && items+=("gnome-disks" "Disks")
+    command -v baobab &>/dev/null && items+=("baobab" "Disk Usage")
+    command -v gparted &>/dev/null && items+=("gparted" "GParted")
+
+    [ ${#items[@]} -eq 0 ] && return
+    local choice=$(whiptail --title "Files & Storage" --menu "" 14 50 6 "${items[@]}" 3>&1 1>&2 2>&3)
+    [ -n "$choice" ] && launch "$choice"
+}
+
+menu_printing() {
+    local items=()
+    command -v system-config-printer &>/dev/null && items+=("system-config-printer" "Printers")
+    command -v simple-scan &>/dev/null && items+=("simple-scan" "Scanner")
+
+    [ ${#items[@]} -eq 0 ] && return
+    local choice=$(whiptail --title "Printing & Scanning" --menu "" 12 50 4 "${items[@]}" 3>&1 1>&2 2>&3)
+    [ -n "$choice" ] && launch "$choice"
+}
+
+menu_security() {
+    local items=()
+    command -v seahorse &>/dev/null && items+=("seahorse" "Passwords & Keys")
+    command -v keepassxc &>/dev/null && items+=("keepassxc" "KeePassXC")
+    command -v gufw &>/dev/null && items+=("gufw" "Firewall")
+    command -v veracrypt &>/dev/null && items+=("veracrypt" "VeraCrypt")
+
+    [ ${#items[@]} -eq 0 ] && return
+    local choice=$(whiptail --title "Security & Privacy" --menu "" 14 50 6 "${items[@]}" 3>&1 1>&2 2>&3)
+    [ -n "$choice" ] && launch "$choice"
+}
+
+menu_dev() {
+    local items=()
+    command -v code &>/dev/null && items+=("code" "VS Code")
+    command -v geany &>/dev/null && items+=("geany" "Geany")
+    command -v meld &>/dev/null && items+=("meld" "Meld")
+    command -v gitg &>/dev/null && items+=("gitg" "Gitg")
+    command -v dbeaver &>/dev/null && items+=("dbeaver" "DBeaver")
+
+    [ ${#items[@]} -eq 0 ] && return
+    local choice=$(whiptail --title "Development Tools" --menu "" 14 50 6 "${items[@]}" 3>&1 1>&2 2>&3)
+    [ -n "$choice" ] && launch "$choice"
+}
+
+menu_monitor() {
+    local items=()
+    command -v htop &>/dev/null && items+=("htop" "htop")
+    command -v btop &>/dev/null && items+=("btop" "btop")
+    command -v gnome-system-monitor &>/dev/null && items+=("gnome-system-monitor" "System Monitor")
+    command -v hardinfo &>/dev/null && items+=("hardinfo" "Hardware Info")
+    command -v stacer &>/dev/null && items+=("stacer" "Stacer")
+
+    [ ${#items[@]} -eq 0 ] && return
+    local choice=$(whiptail --title "System Monitoring" --menu "" 14 50 6 "${items[@]}" 3>&1 1>&2 2>&3)
+    [ -n "$choice" ] && launch "$choice"
+}
+
+menu_screenshot() {
+    local items=()
+    command -v flameshot &>/dev/null && items+=("flameshot" "Flameshot")
+    command -v shutter &>/dev/null && items+=("shutter" "Shutter")
+    command -v peek &>/dev/null && items+=("peek" "Peek")
+    command -v simplescreenrecorder &>/dev/null && items+=("simplescreenrecorder" "Screen Recorder")
+
+    [ ${#items[@]} -eq 0 ] && return
+    local choice=$(whiptail --title "Screenshot & Recording" --menu "" 14 50 6 "${items[@]}" 3>&1 1>&2 2>&3)
+    [ -n "$choice" ] && launch "$choice"
+}
+
+menu_utils() {
+    local items=()
+    command -v rofi &>/dev/null && items+=("rofi" "Rofi")
+    command -v copyq &>/dev/null && items+=("copyq" "CopyQ")
+    command -v picom &>/dev/null && items+=("picom" "Picom")
+    command -v dunst &>/dev/null && items+=("dunst" "Dunst")
+
+    [ ${#items[@]} -eq 0 ] && return
+    local choice=$(whiptail --title "Utilities" --menu "" 14 50 6 "${items[@]}" 3>&1 1>&2 2>&3)
+    [ -n "$choice" ] && launch "$choice"
+}
+
+menu_office() {
+    local items=()
+    command -v libreoffice &>/dev/null && items+=("libreoffice" "LibreOffice")
+    command -v evince &>/dev/null && items+=("evince" "Document Viewer")
+    command -v okular &>/dev/null && items+=("okular" "Okular")
+    command -v xournalpp &>/dev/null && items+=("xournalpp" "Xournal++")
+
+    [ ${#items[@]} -eq 0 ] && return
+    local choice=$(whiptail --title "Office & Documents" --menu "" 14 50 6 "${items[@]}" 3>&1 1>&2 2>&3)
+    [ -n "$choice" ] && launch "$choice"
+}
+
+menu_comm() {
+    local items=()
+    command -v discord &>/dev/null && items+=("discord" "Discord")
+    command -v thunderbird &>/dev/null && items+=("thunderbird" "Thunderbird")
+    command -v telegram-desktop &>/dev/null && items+=("telegram-desktop" "Telegram")
+    command -v slack &>/dev/null && items+=("slack" "Slack")
+
+    [ ${#items[@]} -eq 0 ] && return
+    local choice=$(whiptail --title "Communication" --menu "" 14 50 6 "${items[@]}" 3>&1 1>&2 2>&3)
+    [ -n "$choice" ] && launch "$choice"
+}
+
+menu_backup() {
+    local items=()
+    command -v deja-dup &>/dev/null && items+=("deja-dup" "Backups")
+    command -v timeshift &>/dev/null && items+=("timeshift" "Timeshift")
+    command -v syncthing-gtk &>/dev/null && items+=("syncthing-gtk" "Syncthing")
+
+    [ ${#items[@]} -eq 0 ] && return
+    local choice=$(whiptail --title "Backup & Sync" --menu "" 12 50 4 "${items[@]}" 3>&1 1>&2 2>&3)
+    [ -n "$choice" ] && launch "$choice"
+}
+
+#═══════════════════════════════════════════════════════════════════════════════
+# MAIN MENU
+#═══════════════════════════════════════════════════════════════════════════════
+
+main_menu() {
+    while true; do
+        local cats=()
+
+        # System
+        (command -v gnome-control-center || command -v dconf-editor || command -v gnome-tweaks) &>/dev/null && \
+            cats+=("1" "System Settings")
+
+        # Display
+        (command -v arandr || command -v nvidia-settings || command -v lxrandr) &>/dev/null && \
+            cats+=("2" "Display & Graphics")
+
+        # Network
+        (command -v nm-connection-editor || command -v blueman-manager) &>/dev/null && \
+            cats+=("3" "Network & Internet")
+
+        # Audio
+        (command -v pavucontrol || command -v vlc || command -v audacity) &>/dev/null && \
+            cats+=("4" "Audio & Video")
+
+        # Power
+        command -v xfce4-power-manager-settings &>/dev/null && \
+            cats+=("5" "Power & Battery")
+
+        # Appearance
+        (command -v lxappearance || command -v nitrogen || command -v qt5ct) &>/dev/null && \
+            cats+=("6" "Appearance & Themes")
+
+        # Files
+        (command -v thunar || command -v nautilus || command -v gnome-disks) &>/dev/null && \
+            cats+=("7" "Files & Storage")
+
+        # Printing
+        (command -v system-config-printer || command -v simple-scan) &>/dev/null && \
+            cats+=("8" "Printing & Scanning")
+
+        # Security
+        (command -v seahorse || command -v keepassxc || command -v gufw) &>/dev/null && \
+            cats+=("9" "Security & Privacy")
+
+        # Dev
+        (command -v code || command -v geany || command -v meld) &>/dev/null && \
+            cats+=("10" "Development Tools")
+
+        # Monitor
+        (command -v htop || command -v btop || command -v gnome-system-monitor) &>/dev/null && \
+            cats+=("11" "System Monitoring")
+
+        # Screenshot
+        (command -v flameshot || command -v shutter || command -v peek) &>/dev/null && \
+            cats+=("12" "Screenshot & Recording")
+
+        # Utils
+        (command -v rofi || command -v copyq || command -v picom) &>/dev/null && \
+            cats+=("13" "Utilities")
+
+        # Office
+        (command -v libreoffice || command -v evince || command -v okular) &>/dev/null && \
+            cats+=("14" "Office & Documents")
+
+        # Comm
+        (command -v discord || command -v thunderbird || command -v telegram-desktop) &>/dev/null && \
+            cats+=("15" "Communication")
+
+        # Backup
+        (command -v deja-dup || command -v timeshift || command -v syncthing-gtk) &>/dev/null && \
+            cats+=("16" "Backup & Sync")
+
+        if [ ${#cats[@]} -eq 0 ]; then
+            whiptail --title "Settings" --msgbox "No tools installed.\n\nRun 'settings-hub' to install some." 10 45
+            exit 0
+        fi
+
+        choice=$(whiptail --title "Settings" --menu "\nSelect a category:" 20 45 12 "${cats[@]}" 3>&1 1>&2 2>&3)
+
+        [ $? -ne 0 ] && exit 0
+
+        case $choice in
+            1) menu_system ;;
+            2) menu_display ;;
+            3) menu_network ;;
+            4) menu_audio ;;
+            5) menu_power ;;
+            6) menu_appearance ;;
+            7) menu_files ;;
+            8) menu_printing ;;
+            9) menu_security ;;
+            10) menu_dev ;;
+            11) menu_monitor ;;
+            12) menu_screenshot ;;
+            13) menu_utils ;;
+            14) menu_office ;;
+            15) menu_comm ;;
+            16) menu_backup ;;
+        esac
+    done
+}
+
+main_menu

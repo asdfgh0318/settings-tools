@@ -1,0 +1,333 @@
+#!/bin/bash
+#═══════════════════════════════════════════════════════════════════════════════
+# Settings Hub - Terminal UI App Store & Launcher for i3
+# Similar to nmtui - clean text interface
+#═══════════════════════════════════════════════════════════════════════════════
+
+# Detect package manager
+if command -v apt &>/dev/null; then
+    PKG_INSTALL="sudo apt install -y"
+elif command -v dnf &>/dev/null; then
+    PKG_INSTALL="sudo dnf install -y"
+elif command -v pacman &>/dev/null; then
+    PKG_INSTALL="sudo pacman -S --noconfirm"
+else
+    PKG_INSTALL="sudo apt install -y"
+fi
+
+# Check if installed: returns [X] or [ ]
+chk() {
+    command -v "$1" &>/dev/null && echo "[X]" || echo "[ ]"
+}
+
+#═══════════════════════════════════════════════════════════════════════════════
+# MAIN MENU
+#═══════════════════════════════════════════════════════════════════════════════
+
+main_menu() {
+    while true; do
+        CHOICE=$(whiptail --title "Settings Hub" --menu "\nSelect a category:\n" 22 60 12 \
+            "1" "System Settings" \
+            "2" "Display & Graphics" \
+            "3" "Network & Internet" \
+            "4" "Audio & Video" \
+            "5" "Power & Battery" \
+            "6" "Appearance & Themes" \
+            "7" "Files & Storage" \
+            "8" "Printing & Scanning" \
+            "9" "Security & Privacy" \
+            "10" "Development Tools" \
+            "11" "System Monitoring" \
+            "12" "Screenshot & Recording" \
+            "13" "Utilities" \
+            "14" "Office & Documents" \
+            "15" "Communication" \
+            "16" "Backup & Sync" \
+            "17" "Install All Essential" \
+            3>&1 1>&2 2>&3)
+
+        [ $? -ne 0 ] && exit 0
+
+        case $CHOICE in
+            1) category_system ;;
+            2) category_display ;;
+            3) category_network ;;
+            4) category_audio ;;
+            5) category_power ;;
+            6) category_appearance ;;
+            7) category_files ;;
+            8) category_printing ;;
+            9) category_security ;;
+            10) category_dev ;;
+            11) category_monitor ;;
+            12) category_screenshot ;;
+            13) category_utils ;;
+            14) category_office ;;
+            15) category_comm ;;
+            16) category_backup ;;
+            17) install_essential ;;
+        esac
+    done
+}
+
+#═══════════════════════════════════════════════════════════════════════════════
+# CATEGORY MENUS
+#═══════════════════════════════════════════════════════════════════════════════
+
+category_system() {
+    CHOICE=$(whiptail --title "System Settings" --menu "\n[X] = Installed  [ ] = Not installed\n" 18 70 6 \
+        "gnome-control-center" "$(chk gnome-control-center) Full system settings panel" \
+        "dconf-editor" "$(chk dconf-editor) Advanced GTK/GNOME settings editor" \
+        "gnome-tweaks" "$(chk gnome-tweaks) GNOME desktop customization" \
+        "lxqt-config" "$(chk lxqt-config) Lightweight Qt system config" \
+        3>&1 1>&2 2>&3)
+    [ -n "$CHOICE" ] && handle_app "$CHOICE" "$CHOICE"
+}
+
+category_display() {
+    CHOICE=$(whiptail --title "Display & Graphics" --menu "\n[X] = Installed  [ ] = Not installed\n" 18 70 6 \
+        "arandr" "$(chk arandr) Visual multi-monitor configuration" \
+        "nvidia-settings" "$(chk nvidia-settings) NVIDIA graphics configuration" \
+        "lxrandr" "$(chk lxrandr) Simple monitor config tool" \
+        "redshift-gtk" "$(chk redshift-gtk) Screen color temperature" \
+        3>&1 1>&2 2>&3)
+    [ -n "$CHOICE" ] && handle_app "$CHOICE" "$CHOICE"
+}
+
+category_network() {
+    CHOICE=$(whiptail --title "Network & Internet" --menu "\n[X] = Installed  [ ] = Not installed\n" 18 70 6 \
+        "nm-connection-editor" "$(chk nm-connection-editor) WiFi, VPN, Ethernet config" \
+        "blueman-manager" "$(chk blueman-manager) Bluetooth device manager" \
+        "wireshark" "$(chk wireshark) Network packet analyzer" \
+        "firewall-config" "$(chk firewall-config) Firewall GUI" \
+        3>&1 1>&2 2>&3)
+
+    [ -z "$CHOICE" ] && return
+    case $CHOICE in
+        nm-connection-editor) handle_app "$CHOICE" "network-manager-gnome" ;;
+        blueman-manager) handle_app "$CHOICE" "blueman" ;;
+        *) handle_app "$CHOICE" "$CHOICE" ;;
+    esac
+}
+
+category_audio() {
+    CHOICE=$(whiptail --title "Audio & Video" --menu "\n[X] = Installed  [ ] = Not installed\n" 20 70 8 \
+        "pavucontrol" "$(chk pavucontrol) PulseAudio volume control" \
+        "qpwgraph" "$(chk qpwgraph) PipeWire patchbay" \
+        "easyeffects" "$(chk easyeffects) Audio effects (EQ, compressor)" \
+        "audacity" "$(chk audacity) Audio editor" \
+        "vlc" "$(chk vlc) Media player" \
+        "obs-studio" "$(chk obs-studio) Screen recording & streaming" \
+        3>&1 1>&2 2>&3)
+    [ -n "$CHOICE" ] && handle_app "$CHOICE" "$CHOICE"
+}
+
+category_power() {
+    CHOICE=$(whiptail --title "Power & Battery" --menu "\n[X] = Installed  [ ] = Not installed\n" 16 70 4 \
+        "xfce4-power-manager-settings" "$(chk xfce4-power-manager-settings) Battery, brightness, sleep" \
+        "tlp" "$(chk tlp) Advanced power management" \
+        "auto-cpufreq" "$(chk auto-cpufreq) Auto CPU optimizer" \
+        3>&1 1>&2 2>&3)
+
+    [ -z "$CHOICE" ] && return
+    case $CHOICE in
+        xfce4-power-manager-settings) handle_app "$CHOICE" "xfce4-power-manager" ;;
+        *) handle_app "$CHOICE" "$CHOICE" ;;
+    esac
+}
+
+category_appearance() {
+    CHOICE=$(whiptail --title "Appearance & Themes" --menu "\n[X] = Installed  [ ] = Not installed\n" 18 70 6 \
+        "lxappearance" "$(chk lxappearance) GTK themes, icons, fonts" \
+        "qt5ct" "$(chk qt5ct) Qt5 appearance settings" \
+        "nitrogen" "$(chk nitrogen) Wallpaper setter" \
+        "variety" "$(chk variety) Auto wallpaper changer" \
+        "kvantum-manager" "$(chk kvantum-manager) Qt theme engine" \
+        3>&1 1>&2 2>&3)
+
+    [ -z "$CHOICE" ] && return
+    case $CHOICE in
+        kvantum-manager) handle_app "$CHOICE" "kvantum" ;;
+        *) handle_app "$CHOICE" "$CHOICE" ;;
+    esac
+}
+
+category_files() {
+    CHOICE=$(whiptail --title "Files & Storage" --menu "\n[X] = Installed  [ ] = Not installed\n" 20 70 8 \
+        "thunar" "$(chk thunar) Lightweight file manager" \
+        "nautilus" "$(chk nautilus) GNOME file manager" \
+        "gnome-disks" "$(chk gnome-disks) Disk management, SMART" \
+        "baobab" "$(chk baobab) Disk usage analyzer" \
+        "gparted" "$(chk gparted) Partition editor" \
+        "filelight" "$(chk filelight) Disk usage visualization" \
+        3>&1 1>&2 2>&3)
+
+    [ -z "$CHOICE" ] && return
+    case $CHOICE in
+        gnome-disks) handle_app "$CHOICE" "gnome-disk-utility" ;;
+        *) handle_app "$CHOICE" "$CHOICE" ;;
+    esac
+}
+
+category_printing() {
+    CHOICE=$(whiptail --title "Printing & Scanning" --menu "\n[X] = Installed  [ ] = Not installed\n" 14 70 3 \
+        "system-config-printer" "$(chk system-config-printer) Printer configuration" \
+        "simple-scan" "$(chk simple-scan) Document scanner" \
+        3>&1 1>&2 2>&3)
+    [ -n "$CHOICE" ] && handle_app "$CHOICE" "$CHOICE"
+}
+
+category_security() {
+    CHOICE=$(whiptail --title "Security & Privacy" --menu "\n[X] = Installed  [ ] = Not installed\n" 18 70 6 \
+        "seahorse" "$(chk seahorse) Passwords & encryption keys" \
+        "keepassxc" "$(chk keepassxc) Password manager" \
+        "gufw" "$(chk gufw) Firewall (UFW) GUI" \
+        "veracrypt" "$(chk veracrypt) Disk encryption" \
+        3>&1 1>&2 2>&3)
+    [ -n "$CHOICE" ] && handle_app "$CHOICE" "$CHOICE"
+}
+
+category_dev() {
+    CHOICE=$(whiptail --title "Development Tools" --menu "\n[X] = Installed  [ ] = Not installed\n" 18 70 6 \
+        "code" "$(chk code) VS Code editor" \
+        "geany" "$(chk geany) Lightweight IDE" \
+        "meld" "$(chk meld) Visual diff/merge tool" \
+        "gitg" "$(chk gitg) Git repository viewer" \
+        "dbeaver" "$(chk dbeaver) Database manager" \
+        3>&1 1>&2 2>&3)
+    [ -n "$CHOICE" ] && handle_app "$CHOICE" "$CHOICE"
+}
+
+category_monitor() {
+    CHOICE=$(whiptail --title "System Monitoring" --menu "\n[X] = Installed  [ ] = Not installed\n" 18 70 6 \
+        "htop" "$(chk htop) Interactive process viewer" \
+        "btop" "$(chk btop) Resource monitor" \
+        "gnome-system-monitor" "$(chk gnome-system-monitor) System monitor GUI" \
+        "hardinfo" "$(chk hardinfo) Hardware info & benchmark" \
+        "stacer" "$(chk stacer) System optimizer" \
+        3>&1 1>&2 2>&3)
+    [ -n "$CHOICE" ] && handle_app "$CHOICE" "$CHOICE"
+}
+
+category_screenshot() {
+    CHOICE=$(whiptail --title "Screenshot & Recording" --menu "\n[X] = Installed  [ ] = Not installed\n" 18 70 5 \
+        "flameshot" "$(chk flameshot) Screenshot with annotation" \
+        "shutter" "$(chk shutter) Feature-rich screenshots" \
+        "peek" "$(chk peek) GIF screen recorder" \
+        "simplescreenrecorder" "$(chk simplescreenrecorder) Screen recorder" \
+        3>&1 1>&2 2>&3)
+    [ -n "$CHOICE" ] && handle_app "$CHOICE" "$CHOICE"
+}
+
+category_utils() {
+    CHOICE=$(whiptail --title "Utilities" --menu "\n[X] = Installed  [ ] = Not installed\n" 20 70 8 \
+        "rofi" "$(chk rofi) App launcher & switcher" \
+        "dunst" "$(chk dunst) Notification daemon" \
+        "picom" "$(chk picom) Compositor (transparency)" \
+        "copyq" "$(chk copyq) Clipboard manager" \
+        "xclip" "$(chk xclip) Clipboard CLI tool" \
+        "autokey-gtk" "$(chk autokey-gtk) Text expansion & automation" \
+        3>&1 1>&2 2>&3)
+    [ -n "$CHOICE" ] && handle_app "$CHOICE" "$CHOICE"
+}
+
+category_office() {
+    CHOICE=$(whiptail --title "Office & Documents" --menu "\n[X] = Installed  [ ] = Not installed\n" 18 70 5 \
+        "libreoffice" "$(chk libreoffice) Office suite" \
+        "evince" "$(chk evince) PDF viewer" \
+        "okular" "$(chk okular) Document viewer" \
+        "xournalpp" "$(chk xournalpp) PDF annotation" \
+        3>&1 1>&2 2>&3)
+    [ -n "$CHOICE" ] && handle_app "$CHOICE" "$CHOICE"
+}
+
+category_comm() {
+    CHOICE=$(whiptail --title "Communication" --menu "\n[X] = Installed  [ ] = Not installed\n" 18 70 5 \
+        "discord" "$(chk discord) Voice & text chat" \
+        "thunderbird" "$(chk thunderbird) Email client" \
+        "telegram-desktop" "$(chk telegram-desktop) Telegram messenger" \
+        "slack" "$(chk slack) Team communication" \
+        3>&1 1>&2 2>&3)
+    [ -n "$CHOICE" ] && handle_app "$CHOICE" "$CHOICE"
+}
+
+category_backup() {
+    CHOICE=$(whiptail --title "Backup & Sync" --menu "\n[X] = Installed  [ ] = Not installed\n" 18 70 5 \
+        "deja-dup" "$(chk deja-dup) Simple backups" \
+        "timeshift" "$(chk timeshift) System restore" \
+        "syncthing-gtk" "$(chk syncthing-gtk) File sync" \
+        "rclone" "$(chk rclone) Cloud storage CLI" \
+        3>&1 1>&2 2>&3)
+    [ -n "$CHOICE" ] && handle_app "$CHOICE" "$CHOICE"
+}
+
+#═══════════════════════════════════════════════════════════════════════════════
+# APP HANDLER
+#═══════════════════════════════════════════════════════════════════════════════
+
+handle_app() {
+    local cmd="$1"
+    local pkg="$2"
+
+    if command -v "$cmd" &>/dev/null; then
+        # App installed - launch it
+        whiptail --title "Launch" --yesno "Launch $cmd now?" 8 40
+        if [ $? -eq 0 ]; then
+            nohup "$cmd" &>/dev/null &
+            sleep 0.5
+        fi
+    else
+        # App not installed - offer install
+        whiptail --title "Install" --yesno "$cmd is not installed.\n\nInstall package: $pkg?" 10 50
+        if [ $? -eq 0 ]; then
+            clear
+            echo "Installing $pkg..."
+            echo "Running: $PKG_INSTALL $pkg"
+            echo ""
+            $PKG_INSTALL "$pkg"
+            echo ""
+            echo "Press Enter to continue..."
+            read
+        fi
+    fi
+}
+
+#═══════════════════════════════════════════════════════════════════════════════
+# INSTALL ESSENTIAL
+#═══════════════════════════════════════════════════════════════════════════════
+
+install_essential() {
+    whiptail --title "Install Essential Tools" --yesno "Install these essential packages?\n
+• gnome-control-center (System settings)
+• arandr (Display config)
+• network-manager-gnome (Network)
+• pavucontrol (Audio)
+• blueman (Bluetooth)
+• xfce4-power-manager (Power)
+• lxappearance (Themes)
+• nitrogen (Wallpaper)
+• gnome-disk-utility (Disks)
+• thunar (File manager)
+• flameshot (Screenshots)
+• htop (Process viewer)
+• rofi (App launcher)
+• dunst (Notifications)" 24 50
+
+    if [ $? -eq 0 ]; then
+        clear
+        echo "Installing essential packages..."
+        echo ""
+        $PKG_INSTALL gnome-control-center arandr network-manager-gnome \
+            pavucontrol blueman xfce4-power-manager lxappearance nitrogen \
+            gnome-disk-utility thunar flameshot htop rofi dunst
+        echo ""
+        echo "Done! Press Enter to continue..."
+        read
+    fi
+}
+
+#═══════════════════════════════════════════════════════════════════════════════
+# START
+#═══════════════════════════════════════════════════════════════════════════════
+
+main_menu
