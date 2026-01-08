@@ -1,0 +1,72 @@
+#!/bin/bash
+#═══════════════════════════════════════════════════════════════════════════════
+# Settings Wofi - Launch settings tools from wofi
+# Shows Terminal and GUI apps in categories
+#═══════════════════════════════════════════════════════════════════════════════
+
+# Auto-detect terminal emulator
+if command -v foot &>/dev/null; then
+    TERMINAL="foot"
+elif command -v alacritty &>/dev/null; then
+    TERMINAL="alacritty -e"
+elif command -v kitty &>/dev/null; then
+    TERMINAL="kitty"
+else
+    TERMINAL="x-terminal-emulator -e"
+fi
+
+# Paths
+SETTINGS="$HOME/bin/settings"
+SETTINGS_HUB="$HOME/bin/settings-hub"
+
+# Show menu if no argument
+if [ -z "$1" ]; then
+    echo "── Terminal ──"
+    command -v nmtui &>/dev/null && echo "  Network (nmtui)"
+    command -v nmtui-connect &>/dev/null && echo "  WiFi Connect"
+    [ -x "$SETTINGS" ] && echo "  Settings"
+    [ -x "$SETTINGS_HUB" ] && echo "  Settings Hub"
+    command -v htop &>/dev/null && echo "  htop"
+    command -v btop &>/dev/null && echo "  btop"
+    command -v nmcli &>/dev/null && echo "  nmcli monitor"
+    echo "── Apps ──"
+    command -v gnome-control-center &>/dev/null && echo "  System Settings"
+    command -v nm-connection-editor &>/dev/null && echo "  Network Connections"
+    command -v blueman-manager &>/dev/null && echo "  Bluetooth"
+    command -v pavucontrol &>/dev/null && echo "  Volume Control"
+    command -v arandr &>/dev/null && echo "  Display Config"
+    command -v xfce4-power-manager-settings &>/dev/null && echo "  Power Manager"
+    command -v lxappearance &>/dev/null && echo "  Appearance"
+    command -v nitrogen &>/dev/null && echo "  Wallpaper"
+    command -v gnome-disks &>/dev/null && echo "  Disks"
+    command -v thunar &>/dev/null && echo "  File Manager"
+    command -v nautilus &>/dev/null && echo "  Files"
+    command -v system-config-printer &>/dev/null && echo "  Printers"
+    command -v gnome-system-monitor &>/dev/null && echo "  System Monitor"
+    exit 0
+fi
+
+# Handle selection
+case "$*" in
+    *"Network (nmtui)"*) exec $TERMINAL nmtui ;;
+    *"WiFi Connect"*) exec $TERMINAL nmtui-connect ;;
+    *"Settings Hub"*) exec $TERMINAL "$SETTINGS_HUB" ;;
+    *"Settings"*) exec $TERMINAL "$SETTINGS" ;;
+    *"htop"*) exec $TERMINAL htop ;;
+    *"btop"*) exec $TERMINAL btop ;;
+    *"nmcli monitor"*) exec $TERMINAL nmcli monitor ;;
+    *"System Settings"*) exec gnome-control-center ;;
+    *"Network Connections"*) exec nm-connection-editor ;;
+    *"Bluetooth"*) exec blueman-manager ;;
+    *"Volume Control"*) exec pavucontrol ;;
+    *"Display Config"*) exec arandr ;;
+    *"Power Manager"*) exec xfce4-power-manager-settings ;;
+    *"Appearance"*) exec lxappearance ;;
+    *"Wallpaper"*) exec nitrogen ;;
+    *"Disks"*) exec gnome-disks ;;
+    *"File Manager"*) exec thunar ;;
+    *"Files"*) exec nautilus ;;
+    *"Printers"*) exec system-config-printer ;;
+    *"System Monitor"*) exec gnome-system-monitor ;;
+    *"Terminal"*|*"Apps"*) exit 0 ;;
+esac

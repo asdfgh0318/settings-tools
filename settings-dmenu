@@ -1,0 +1,367 @@
+#!/bin/bash
+#═══════════════════════════════════════════════════════════════════════════════
+# Settings Dmenu - Launch apps from bemenu/dmenu
+# With emoji icons and categories
+#═══════════════════════════════════════════════════════════════════════════════
+
+# Terminal emulator
+TERM_CMD="foot"
+
+# Menu command (bemenu for wayland, dmenu for X11)
+if command -v bemenu &>/dev/null; then
+    MENU="bemenu -i -l 15 -p '⚙ Apps'"
+elif command -v dmenu &>/dev/null; then
+    MENU="dmenu -i -l 15 -p Apps"
+else
+    notify-send "Error" "Install bemenu: sudo apt install bemenu"
+    exit 1
+fi
+
+# Paths
+SETTINGS="$HOME/bin/settings"
+SETTINGS_HUB="$HOME/bin/settings-hub"
+
+# Build menu
+menu_items() {
+    echo "─── 🖥 Terminal ───"
+    command -v nmtui &>/dev/null && echo "        🌐 Network (nmtui)"
+    command -v nmtui-connect &>/dev/null && echo "        📶 WiFi Connect"
+    [ -x "$SETTINGS" ] && echo "        ⚙️  Settings"
+    [ -x "$SETTINGS_HUB" ] && echo "        🏪 Settings Hub"
+    command -v htop &>/dev/null && echo "        📊 htop"
+    command -v btop &>/dev/null && echo "        📈 btop"
+    command -v nvtop &>/dev/null && echo "        🎮 nvtop (GPU)"
+    command -v nmcli &>/dev/null && echo "        📡 nmcli monitor"
+    command -v alsamixer &>/dev/null && echo "        🔊 alsamixer"
+    command -v pulsemixer &>/dev/null && echo "        🎚️  pulsemixer"
+    command -v ranger &>/dev/null && echo "        📁 ranger"
+    command -v mc &>/dev/null && echo "        📁 Midnight Commander"
+    command -v neofetch &>/dev/null && echo "        🖥️  neofetch"
+    command -v cmatrix &>/dev/null && echo "        🟩 cmatrix"
+
+    echo "─── ⚙️  System ───"
+    command -v gnome-control-center &>/dev/null && echo "        ⚙️  System Settings"
+    command -v gnome-software &>/dev/null && echo "        🏪 Software Center"
+    command -v snap-store &>/dev/null && echo "        🏪 Snap Store"
+    command -v software-properties-gtk &>/dev/null && echo "        📦 Software & Updates"
+    command -v update-manager &>/dev/null && echo "        🔄 Software Updater"
+    command -v synaptic &>/dev/null && echo "        📦 Synaptic"
+    command -v gdebi-gtk &>/dev/null && echo "        📦 GDebi Package Installer"
+    command -v gnome-tweaks &>/dev/null && echo "        🔧 GNOME Tweaks"
+    command -v dconf-editor &>/dev/null && echo "        🔧 DConf Editor"
+
+    echo "─── 🌐 Network ───"
+    command -v nm-connection-editor &>/dev/null && echo "        🌐 Network Connections"
+    command -v blueman-manager &>/dev/null && echo "        📶 Bluetooth"
+    command -v gufw &>/dev/null && echo "        🛡️  Firewall"
+    command -v wireshark &>/dev/null && echo "        🔍 Wireshark"
+
+    echo "─── 🔊 Audio & Video ───"
+    command -v pavucontrol &>/dev/null && echo "        🔊 Volume Control"
+    command -v pwvucontrol &>/dev/null && echo "        🎛️  PipeWire Volume"
+    command -v easyeffects &>/dev/null && echo "        🎵 Easy Effects"
+    command -v vlc &>/dev/null && echo "        🎬 VLC"
+    command -v mpv &>/dev/null && echo "        🎬 mpv"
+    command -v totem &>/dev/null && echo "        🎬 Videos"
+    command -v rhythmbox &>/dev/null && echo "        🎵 Rhythmbox"
+    command -v spotify &>/dev/null && echo "        🎵 Spotify"
+    command -v audacity &>/dev/null && echo "        🎙️  Audacity"
+    command -v obs-studio &>/dev/null && echo "        📹 OBS Studio"
+    command -v kdenlive &>/dev/null && echo "        🎬 Kdenlive"
+    command -v shotcut &>/dev/null && echo "        🎬 Shotcut"
+    command -v handbrake &>/dev/null && echo "        🎬 HandBrake"
+    command -v cheese &>/dev/null && echo "        📷 Cheese Webcam"
+
+    echo "─── 🖥️  Display ───"
+    command -v arandr &>/dev/null && echo "        🖥️  Display Config"
+    command -v wdisplays &>/dev/null && echo "        🖥️  Wayland Displays"
+    command -v xfce4-power-manager-settings &>/dev/null && echo "        🔋 Power Manager"
+    command -v lxappearance &>/dev/null && echo "        🎨 Appearance"
+    command -v qt5ct &>/dev/null && echo "        🎨 Qt5 Settings"
+    command -v nwg-look &>/dev/null && echo "        🎨 GTK Settings"
+    command -v nitrogen &>/dev/null && echo "        🖼️  Wallpaper"
+
+    echo "─── 📁 Files ───"
+    command -v thunar &>/dev/null && echo "        📁 Thunar"
+    command -v nautilus &>/dev/null && echo "        📁 Files"
+    command -v pcmanfm &>/dev/null && echo "        📁 PCManFM"
+    command -v nemo &>/dev/null && echo "        📁 Nemo"
+    command -v dolphin &>/dev/null && echo "        📁 Dolphin"
+    command -v gnome-disks &>/dev/null && echo "        💾 Disks"
+    command -v gparted &>/dev/null && echo "        💿 GParted"
+    command -v baobab &>/dev/null && echo "        📊 Disk Usage"
+    command -v file-roller &>/dev/null && echo "        📦 Archive Manager"
+
+    echo "─── 🖨️  Hardware ───"
+    command -v system-config-printer &>/dev/null && echo "        🖨️  Printers"
+    command -v simple-scan &>/dev/null && echo "        📄 Scanner"
+    command -v gnome-system-monitor &>/dev/null && echo "        📊 System Monitor"
+    command -v stacer &>/dev/null && echo "        🧹 Stacer"
+    command -v hardinfo &>/dev/null && echo "        🖥️  Hardware Info"
+    command -v cpu-x &>/dev/null && echo "        🖥️  CPU-X"
+
+    echo "─── 💾 Backup ───"
+    command -v timeshift &>/dev/null && echo "        💾 Timeshift"
+    command -v deja-dup &>/dev/null && echo "        💾 Backups"
+    command -v seahorse &>/dev/null && echo "        🔑 Passwords & Keys"
+    command -v keepassxc &>/dev/null && echo "        🔐 KeePassXC"
+
+    echo "─── 🌐 Internet ───"
+    command -v firefox &>/dev/null && echo "        🦊 Firefox"
+    command -v google-chrome &>/dev/null && echo "        🌐 Chrome"
+    command -v chromium &>/dev/null && echo "        🌐 Chromium"
+    command -v brave-browser &>/dev/null && echo "        🦁 Brave"
+    command -v thunderbird &>/dev/null && echo "        📧 Thunderbird"
+    command -v geary &>/dev/null && echo "        📧 Geary"
+    command -v discord &>/dev/null && echo "        💬 Discord"
+    command -v telegram-desktop &>/dev/null && echo "        💬 Telegram"
+    command -v slack &>/dev/null && echo "        💬 Slack"
+    command -v signal-desktop &>/dev/null && echo "        💬 Signal"
+    command -v zoom &>/dev/null && echo "        📹 Zoom"
+    command -v teams &>/dev/null && echo "        📹 Teams"
+    command -v transmission-gtk &>/dev/null && echo "        📥 Transmission"
+    command -v qbittorrent &>/dev/null && echo "        📥 qBittorrent"
+    command -v filezilla &>/dev/null && echo "        📂 FileZilla"
+
+    echo "─── 📝 Office ───"
+    command -v libreoffice &>/dev/null && echo "        📝 LibreOffice"
+    command -v libreoffice --writer &>/dev/null && echo "        📄 Writer"
+    command -v libreoffice --calc &>/dev/null && echo "        📊 Calc"
+    command -v libreoffice --impress &>/dev/null && echo "        📽️  Impress"
+    command -v evince &>/dev/null && echo "        📕 Document Viewer"
+    command -v okular &>/dev/null && echo "        📕 Okular"
+    command -v xournalpp &>/dev/null && echo "        ✏️  Xournal++"
+    command -v calibre &>/dev/null && echo "        📚 Calibre"
+    command -v gnome-calendar &>/dev/null && echo "        📅 Calendar"
+    command -v gnome-calculator &>/dev/null && echo "        🔢 Calculator"
+
+    echo "─── 🎨 Graphics ───"
+    command -v gimp &>/dev/null && echo "        🎨 GIMP"
+    command -v inkscape &>/dev/null && echo "        ✒️  Inkscape"
+    command -v krita &>/dev/null && echo "        🎨 Krita"
+    command -v blender &>/dev/null && echo "        🎬 Blender"
+    command -v darktable &>/dev/null && echo "        📷 Darktable"
+    command -v rawtherapee &>/dev/null && echo "        📷 RawTherapee"
+    command -v shotwell &>/dev/null && echo "        📷 Shotwell"
+    command -v eog &>/dev/null && echo "        🖼️  Image Viewer"
+    command -v flameshot &>/dev/null && echo "        📸 Flameshot"
+    command -v peek &>/dev/null && echo "        📹 Peek (GIF)"
+
+    echo "─── 💻 Development ───"
+    command -v code &>/dev/null && echo "        💻 VS Code"
+    command -v codium &>/dev/null && echo "        💻 VSCodium"
+    command -v geany &>/dev/null && echo "        💻 Geany"
+    command -v sublime_text &>/dev/null && echo "        💻 Sublime Text"
+    command -v atom &>/dev/null && echo "        💻 Atom"
+    command -v gedit &>/dev/null && echo "        📝 Text Editor"
+    command -v gnome-text-editor &>/dev/null && echo "        📝 Text Editor"
+    command -v meld &>/dev/null && echo "        🔀 Meld"
+    command -v gitg &>/dev/null && echo "        🔀 Gitg"
+    command -v github-desktop &>/dev/null && echo "        🐙 GitHub Desktop"
+    command -v dbeaver &>/dev/null && echo "        🗄️  DBeaver"
+    command -v postman &>/dev/null && echo "        📮 Postman"
+
+    echo "─── ⚡ Engineering ───"
+    command -v kicad &>/dev/null && echo "        ⚡ KiCad"
+    command -v freecad &>/dev/null && echo "        🔧 FreeCAD"
+    command -v openscad &>/dev/null && echo "        🔧 OpenSCAD"
+    command -v prusa-slicer &>/dev/null && echo "        🖨️  PrusaSlicer"
+    command -v cura &>/dev/null && echo "        🖨️  Cura"
+    command -v arduino &>/dev/null && echo "        🔌 Arduino IDE"
+    command -v fritzing &>/dev/null && echo "        🔌 Fritzing"
+    command -v gqrx &>/dev/null && echo "        📻 Gqrx SDR"
+    command -v octave &>/dev/null && echo "        📐 Octave"
+    command -v matlab &>/dev/null && echo "        📐 MATLAB"
+
+    echo "─── 🎮 Games ───"
+    command -v steam &>/dev/null && echo "        🎮 Steam"
+    command -v lutris &>/dev/null && echo "        🎮 Lutris"
+    command -v heroic &>/dev/null && echo "        🎮 Heroic Launcher"
+    command -v retroarch &>/dev/null && echo "        🎮 RetroArch"
+
+    echo "─── 🖥️  Virtualization ───"
+    command -v virt-manager &>/dev/null && echo "        🖥️  Virtual Machine Manager"
+    command -v virtualbox &>/dev/null && echo "        🖥️  VirtualBox"
+    command -v vmware &>/dev/null && echo "        🖥️  VMware"
+    command -v gnome-boxes &>/dev/null && echo "        🖥️  Boxes"
+
+    echo "─── ⏻ Power ───"
+    echo "        🚪 Logout"
+    echo "        ♻️  Restart"
+    echo "        ⏻ Shutdown"
+}
+
+# Get selection
+CHOICE=$(menu_items | $MENU)
+
+# Exit if cancelled
+[ -z "$CHOICE" ] && exit 0
+
+# Launch based on selection
+case "$CHOICE" in
+    # Terminal apps
+    *"Network (nmtui)"*)    $TERM_CMD nmtui ;;
+    *"WiFi Connect"*)       $TERM_CMD nmtui-connect ;;
+    *"Settings Hub"*)       $TERM_CMD "$SETTINGS_HUB" ;;
+    *"⚙️  Settings"*)       $TERM_CMD "$SETTINGS" ;;
+    *"htop"*)               $TERM_CMD htop ;;
+    *"btop"*)               $TERM_CMD btop ;;
+    *"nvtop"*)              $TERM_CMD nvtop ;;
+    *"nmcli monitor"*)      $TERM_CMD nmcli monitor ;;
+    *"alsamixer"*)          $TERM_CMD alsamixer ;;
+    *"pulsemixer"*)         $TERM_CMD pulsemixer ;;
+    *"ranger"*)             $TERM_CMD ranger ;;
+    *"Midnight Commander"*) $TERM_CMD mc ;;
+    *"neofetch"*)           $TERM_CMD bash -c 'neofetch; read' ;;
+    *"cmatrix"*)            $TERM_CMD cmatrix ;;
+
+    # System
+    *"System Settings"*)    gnome-control-center & ;;
+    *"Software Center"*)    gnome-software & ;;
+    *"Snap Store"*)         snap-store & ;;
+    *"Software & Updates"*) software-properties-gtk & ;;
+    *"Software Updater"*)   update-manager & ;;
+    *"Synaptic"*)           synaptic-pkexec & ;;
+    *"GDebi"*)              gdebi-gtk & ;;
+    *"GNOME Tweaks"*)       gnome-tweaks & ;;
+    *"DConf Editor"*)       dconf-editor & ;;
+
+    # Network
+    *"Network Connections"*) nm-connection-editor & ;;
+    *"Bluetooth"*)          blueman-manager & ;;
+    *"Firewall"*)           gufw & ;;
+    *"Wireshark"*)          wireshark & ;;
+
+    # Audio & Video
+    *"Volume Control"*)     pavucontrol & ;;
+    *"PipeWire Volume"*)    pwvucontrol & ;;
+    *"Easy Effects"*)       easyeffects & ;;
+    *"VLC"*)                vlc & ;;
+    *"mpv"*)                mpv --player-operation-mode=pseudo-gui & ;;
+    *"Videos"*)             totem & ;;
+    *"Rhythmbox"*)          rhythmbox & ;;
+    *"Spotify"*)            spotify & ;;
+    *"Audacity"*)           audacity & ;;
+    *"OBS Studio"*)         obs & ;;
+    *"Kdenlive"*)           kdenlive & ;;
+    *"Shotcut"*)            shotcut & ;;
+    *"HandBrake"*)          ghb & ;;
+    *"Cheese"*)             cheese & ;;
+
+    # Display
+    *"Display Config"*)     arandr & ;;
+    *"Wayland Displays"*)   wdisplays & ;;
+    *"Power Manager"*)      xfce4-power-manager-settings & ;;
+    *"Appearance"*)         lxappearance & ;;
+    *"Qt5 Settings"*)       qt5ct & ;;
+    *"GTK Settings"*)       nwg-look & ;;
+    *"Wallpaper"*)          nitrogen & ;;
+
+    # Files
+    *"Thunar"*)             thunar & ;;
+    *"📁 Files"*)           nautilus & ;;
+    *"PCManFM"*)            pcmanfm & ;;
+    *"Nemo"*)               nemo & ;;
+    *"Dolphin"*)            dolphin & ;;
+    *"Disks"*)              gnome-disks & ;;
+    *"GParted"*)            gparted & ;;
+    *"Disk Usage"*)         baobab & ;;
+    *"Archive Manager"*)    file-roller & ;;
+
+    # Hardware
+    *"Printers"*)           system-config-printer & ;;
+    *"Scanner"*)            simple-scan & ;;
+    *"System Monitor"*)     gnome-system-monitor & ;;
+    *"Stacer"*)             stacer & ;;
+    *"Hardware Info"*)      hardinfo & ;;
+    *"CPU-X"*)              cpu-x & ;;
+
+    # Backup
+    *"Timeshift"*)          timeshift-launcher & ;;
+    *"💾 Backups"*)         deja-dup & ;;
+    *"Passwords & Keys"*)   seahorse & ;;
+    *"KeePassXC"*)          keepassxc & ;;
+
+    # Internet
+    *"Firefox"*)            firefox & ;;
+    *"Chrome"*)             google-chrome & ;;
+    *"Chromium"*)           chromium & ;;
+    *"Brave"*)              brave-browser & ;;
+    *"Thunderbird"*)        thunderbird & ;;
+    *"Geary"*)              geary & ;;
+    *"Discord"*)            discord & ;;
+    *"Telegram"*)           telegram-desktop & ;;
+    *"Slack"*)              slack & ;;
+    *"Signal"*)             signal-desktop & ;;
+    *"Zoom"*)               zoom & ;;
+    *"Teams"*)              teams & ;;
+    *"Transmission"*)       transmission-gtk & ;;
+    *"qBittorrent"*)        qbittorrent & ;;
+    *"FileZilla"*)          filezilla & ;;
+
+    # Office
+    *"📝 LibreOffice"*)     libreoffice & ;;
+    *"Writer"*)             libreoffice --writer & ;;
+    *"Calc"*)               libreoffice --calc & ;;
+    *"Impress"*)            libreoffice --impress & ;;
+    *"Document Viewer"*)    evince & ;;
+    *"Okular"*)             okular & ;;
+    *"Xournal++"*)          xournalpp & ;;
+    *"Calibre"*)            calibre & ;;
+    *"Calendar"*)           gnome-calendar & ;;
+    *"Calculator"*)         gnome-calculator & ;;
+
+    # Graphics
+    *"GIMP"*)               gimp & ;;
+    *"Inkscape"*)           inkscape & ;;
+    *"Krita"*)              krita & ;;
+    *"Blender"*)            blender & ;;
+    *"Darktable"*)          darktable & ;;
+    *"RawTherapee"*)        rawtherapee & ;;
+    *"Shotwell"*)           shotwell & ;;
+    *"Image Viewer"*)       eog & ;;
+    *"Flameshot"*)          flameshot gui & ;;
+    *"Peek"*)               peek & ;;
+
+    # Development
+    *"VS Code"*)            code & ;;
+    *"VSCodium"*)           codium & ;;
+    *"Geany"*)              geany & ;;
+    *"Sublime Text"*)       sublime_text & ;;
+    *"Atom"*)               atom & ;;
+    *"Text Editor"*)        gnome-text-editor & || gedit & ;;
+    *"Meld"*)               meld & ;;
+    *"Gitg"*)               gitg & ;;
+    *"GitHub Desktop"*)     github-desktop & ;;
+    *"DBeaver"*)            dbeaver & ;;
+    *"Postman"*)            postman & ;;
+
+    # Engineering
+    *"KiCad"*)              kicad & ;;
+    *"FreeCAD"*)            freecad & ;;
+    *"OpenSCAD"*)           openscad & ;;
+    *"PrusaSlicer"*)        prusa-slicer & ;;
+    *"Cura"*)               cura & ;;
+    *"Arduino"*)            arduino & ;;
+    *"Fritzing"*)           fritzing & ;;
+    *"Gqrx"*)               gqrx & ;;
+    *"Octave"*)             octave --gui & ;;
+    *"MATLAB"*)             matlab & ;;
+
+    # Games
+    *"Steam"*)              steam & ;;
+    *"Lutris"*)             lutris & ;;
+    *"Heroic"*)             heroic & ;;
+    *"RetroArch"*)          retroarch & ;;
+
+    # Virtualization
+    *"Virtual Machine Manager"*) virt-manager & ;;
+    *"VirtualBox"*)         virtualbox & ;;
+    *"VMware"*)             vmware & ;;
+    *"Boxes"*)              gnome-boxes & ;;
+
+    # Power
+    *"Logout"*)             swaymsg exit ;;
+    *"Restart"*)            systemctl reboot ;;
+    *"Shutdown"*)           systemctl poweroff ;;
+esac
