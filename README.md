@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="banner.svg" alt="settings-tools banner" width="100%">
+</p>
+
 # Settings Tools for i3
 
 Terminal-based (TUI) tools for managing system settings and applications on i3 window manager. Uses `whiptail` for a clean interface similar to `nmtui`.
