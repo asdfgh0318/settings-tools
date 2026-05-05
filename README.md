@@ -66,6 +66,7 @@ Terminal-based (TUI) tools for managing system settings and applications on i3 w
 |------|---------|---------|
 | **Settings** | `settings` | Quick launcher for installed apps only |
 | **Settings Hub** | `settings-hub` | App store - browse, discover & install new apps |
+| **Printer Manager** | `printerctl` | TUI for CUPS: queue, cancel jobs, enable/disable, test page |
 
 ## Installation
 
@@ -78,6 +79,7 @@ cd settings-tools
 mkdir -p ~/bin
 ln -sf "$(pwd)/settings" ~/bin/settings
 ln -sf "$(pwd)/settings-hub" ~/bin/settings-hub
+ln -sf "$(pwd)/printerctl" ~/bin/printerctl
 
 # Make sure ~/bin is in your PATH
 echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bashrc
@@ -110,6 +112,22 @@ App store interface for **browsing and installing** new tools.
 - Click uninstalled app to install it
 - "Install All Essential" option for quick setup
 - Detects package manager (apt, dnf, pacman, zypper)
+
+## Printer Manager (`printerctl`)
+
+`dialog`-based TUI that wraps the standard CUPS commands (`lpstat`,
+`cancel`, `cupsenable`, `cupsdisable`, `lpadmin`, `lp`).
+
+**Features:**
+- Lists all printers with live status (`idle` / `printing` / `DISABLED`) and marks the default
+- View per-printer queue or all queued jobs across printers
+- Cancel a specific job (picker) or all jobs on a printer
+- Enable / disable (pause) a printer — fixes the common "queue cleared but printer still paused" case
+- Set default printer, print test page, view detailed status
+
+**Dependencies:** `dialog` and CUPS (`cups-client`).
+
+Also reachable from `settings` → *Printing & Scanning* → *printerctl*.
 
 ## Categories
 

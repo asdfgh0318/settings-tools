@@ -1,0 +1,165 @@
+#!/usr/bin/env bash
+# printerctl — terminal UI for managing CUPS printers and print jobs.
+# Wraps lpstat, cancel, cupsenable, cupsdisable, lpadmin, lp.
+
+set -uo pipefail
+
+DIALOG=${DIALOG:-dialog}
+TITLE="Printer Manager"
+TMP=$(mktemp)
+trap 'rm -f "$TMP"' EXIT
+
+command -v "$DIALOG" >/dev/null || { echo "$DIALOG not installed"; exit 1; }
+command -v lpstat   >/dev/null || { echo "CUPS (lpstat) not installed"; exit 1; }
+
+msg() { "$DIALOG" --title "$TITLE" --msgbox "$1" 16 72; }
+
+list_printers() {
+    lpstat -p 2>/dev/null | awk '
+        /^printer / {
+            name = $2
+            if      (index($0, "is idle"))      status = "idle"
+            else if (index($0, "now printing")) status = "printing"
+            else if (index($0, "disabled"))     status = "DISABLED"
+            else                                status = "?"
+            print name "|" status
+        }'
+}
+
+default_printer() {
+    lpstat -d 2>/dev/null | sed -n 's/^system default destination: //p'
+}
+
+run_cmd() {
+    local out rc
+    out=$("$@" 2>&1); rc=$?
+    if [ $rc -eq 0 ]; then
+        msg "OK: $*${out:+\n\n$out}"
+    else
+        msg "Failed (exit $rc): $*\n\n$out"
+    fi
+}
+
+show_queue() {
+    local p=$1 out
+    out=$(lpstat -o "$p" 2>&1)
+    [ -z "$out" ] && out="(queue for $p is empty)"
+    msg "$out"
+}
+
+show_all_queues() {
+    local out
+    out=$(lpstat -o 2>&1)
+    [ -z "$out" ] && out="(no jobs queued on any printer)"
+    msg "$out"
+}
+
+show_status() {
+    local p=$1 out
+    out=$(lpstat -p "$p" -l 2>&1)
+    msg "$out"
+}
+
+cancel_one() {
+    local p=$1 items=()
+    while IFS= read -r line; do
+        [ -z "$line" ] && continue
+        local id user size
+        id=$(awk   '{print $1}' <<<"$line")
+        user=$(awk '{print $2}' <<<"$line")
+        size=$(awk '{print $3}' <<<"$line")
+        items+=("$id" "user=$user size=$size")
+    done < <(lpstat -o "$p" 2>/dev/null)
+
+    if [ ${#items[@]} -eq 0 ]; then
+        msg "No jobs to cancel for $p."
+        return
+    fi
+    "$DIALOG" --title "Cancel job — $p" --menu "Pick a job:" \
+        18 70 10 "${items[@]}" 2>"$TMP" || return
+    run_cmd cancel "$(<"$TMP")"
+}
+
+cancel_all() {
+    local p=$1
+    "$DIALOG" --title "Confirm" --yesno "Cancel ALL queued jobs on $p?" 7 50 || return
+    run_cmd cancel -a "$p"
+}
+
+print_test() {
+    local p=$1
+    "$DIALOG" --title "Confirm" --yesno "Print a test page on $p?" 7 50 || return
+    local f; f=$(mktemp)
+    {
+        echo "printerctl test page"
+        echo "Printer: $p"
+        echo "Date:    $(date)"
+        echo "Host:    $(hostname)"
+    } >"$f"
+    local out rc
+    out=$(lp -d "$p" "$f" 2>&1); rc=$?
+    rm -f "$f"
+    if [ $rc -eq 0 ]; then msg "Submitted:\n$out"; else msg "Failed:\n$out"; fi
+}
+
+printer_menu() {
+    local p=$1
+    while true; do
+        "$DIALOG" --title "$p" --cancel-label "Back" \
+            --menu "Action for $p:" 18 60 10 \
+            queue       "View print queue" \
+            cancel      "Cancel a specific job" \
+            cancel-all  "Cancel all jobs" \
+            enable      "Enable printer" \
+            disable     "Disable (pause) printer" \
+            default     "Set as system default" \
+            test        "Print test page" \
+            status      "Detailed status" \
+            2>"$TMP" || return
+        case "$(<"$TMP")" in
+            queue)      show_queue "$p" ;;
+            cancel)     cancel_one "$p" ;;
+            cancel-all) cancel_all "$p" ;;
+            enable)     run_cmd cupsenable  "$p" ;;
+            disable)    run_cmd cupsdisable "$p" ;;
+            default)    run_cmd lpadmin -d  "$p" ;;
+            test)       print_test "$p" ;;
+            status)     show_status "$p" ;;
+        esac
+    done
+}
+
+main_menu() {
+    while true; do
+        local def items=()
+        def=$(default_printer)
+        while IFS='|' read -r name status; do
+            [ -z "$name" ] && continue
+            local marker=""
+            [ "$name" = "$def" ] && marker=" *"
+            items+=("$name" "[$status]$marker")
+        done < <(list_printers)
+
+        if [ ${#items[@]} -eq 0 ]; then
+            msg "No printers found. Is cupsd running? (systemctl status cups)"
+            return 1
+        fi
+
+        items+=("---queue"   "Show all queued jobs")
+        items+=("---refresh" "Refresh list")
+        items+=("---quit"    "Exit")
+
+        "$DIALOG" --title "$TITLE" --cancel-label "Quit" \
+            --menu "Select a printer (* = default):" 20 70 12 \
+            "${items[@]}" 2>"$TMP" || { clear; return 0; }
+
+        case "$(<"$TMP")" in
+            ---refresh) continue ;;
+            ---quit)    clear; return 0 ;;
+            ---queue)   show_all_queues ;;
+            *)          printer_menu "$(<"$TMP")" ;;
+        esac
+    done
+}
+
+main_menu
