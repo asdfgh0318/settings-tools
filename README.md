@@ -124,7 +124,7 @@ Both tools organize apps into 16 categories:
 | Power & Battery | XFCE Power Manager, TLP |
 | Appearance & Themes | LXAppearance, Qt5ct, Nitrogen |
 | Files & Storage | Thunar, Nautilus, GParted, Disks |
-| Printing & Scanning | Printers, Simple Scan |
+| Printing & Scanning | printerctl (CUPS TUI), Printers, Simple Scan |
 | Security & Privacy | KeePassXC, Seahorse, Firewall |
 | Development Tools | VS Code, Geany, Meld, DBeaver |
 | System Monitoring | htop, btop, System Monitor |

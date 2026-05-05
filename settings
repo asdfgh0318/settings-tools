@@ -99,12 +99,17 @@ menu_files() {
 
 menu_printing() {
     local items=()
+    command -v printerctl &>/dev/null && items+=("printerctl" "Printer Manager (TUI)")
     command -v system-config-printer &>/dev/null && items+=("system-config-printer" "Printers")
     command -v simple-scan &>/dev/null && items+=("simple-scan" "Scanner")
 
     [ ${#items[@]} -eq 0 ] && return
-    local choice=$(whiptail --title "Printing & Scanning" --menu "" 12 50 4 "${items[@]}" 3>&1 1>&2 2>&3)
-    [ -n "$choice" ] && launch "$choice"
+    local choice=$(whiptail --title "Printing & Scanning" --menu "" 13 50 5 "${items[@]}" 3>&1 1>&2 2>&3)
+    [ -z "$choice" ] && return
+    case "$choice" in
+        printerctl) "$choice" ;;
+        *)          launch "$choice" ;;
+    esac
 }
 
 menu_security() {
@@ -241,7 +246,7 @@ main_menu() {
             cats+=("7" "Files & Storage")
 
         # Printing
-        (command -v system-config-printer || command -v simple-scan) &>/dev/null && \
+        (command -v printerctl || command -v system-config-printer || command -v simple-scan) &>/dev/null && \
             cats+=("8" "Printing & Scanning")
 
         # Security
