@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# brother-driver-install — fetch & run Brother's official Linux Driver Install Tool
+# for a given printer/MFP model. Installs LPR+CUPS-wrapper, brscan5, brscan-skey.
+# Usage: brother-driver-install [MODEL]
+#   e.g. brother-driver-install DCP-L3560CDW
+# If MODEL is omitted, tries to auto-detect from a USB-connected Brother device.
+
+set -uo pipefail
+
+INSTALLER_URL="https://download.brother.com/welcome/dlf006893/linux-brprinter-installer-2.2.4-1.gz"
+WORKDIR=$(mktemp -d)
+trap 'rm -rf "$WORKDIR"' EXIT
+
+die() { echo "error: $*" >&2; exit 1; }
+
+[ "$EUID" -eq 0 ] && die "do not run as root — the script will sudo when needed"
+command -v curl   >/dev/null || die "curl not installed"
+command -v gunzip >/dev/null || die "gunzip not installed"
+command -v sudo   >/dev/null || die "sudo not installed"
+
+detect_usb_model() {
+    # Brother USB vendor ID is 04f9. lsusb prints "DCP-L3560CDW series" etc.
+    lsusb 2>/dev/null | awk -F'Brother Industries, Ltd ' '
+        /04f9:/ && NF>1 { sub(/ series.*/, "", $2); print $2; exit }'
+}
+
+MODEL=${1:-}
+if [ -z "$MODEL" ]; then
+    MODEL=$(detect_usb_model)
+    [ -n "$MODEL" ] && echo "auto-detected model: $MODEL"
+fi
+[ -n "$MODEL" ] || die "no model given and no USB Brother device detected — pass model as argument (e.g. DCP-L3560CDW)"
+
+echo ">> downloading Brother installer"
+curl -fsSL "$INSTALLER_URL" -o "$WORKDIR/installer.gz" || die "download failed: $INSTALLER_URL"
+gunzip "$WORKDIR/installer.gz" || die "gunzip failed"
+chmod +x "$WORKDIR/installer"
+
+echo ">> running installer for $MODEL (USB auto-detect, skip test print)"
+# Answers: license Y, GPL Y, install Y, Device URI? N (USB auto), test print? N,
+# then Y for the scanner-driver license/install prompts that follow.
+printf 'y\ny\ny\nn\nn\ny\ny\ny\ny\ny\ny\n' | sudo bash "$WORKDIR/installer" "$MODEL"
+
+# The proprietary printer driver postinst tries to mkdir under /var/spool/lpd,
+# which doesn't exist on modern CUPS. Create it so the .deb's chown/chmod don't warn.
+spool="/var/spool/lpd/$(echo "$MODEL" | tr '[:upper:]-' '[:lower:]' | tr -d ' ')"
+sudo mkdir -p "$spool" && sudo chown lp:lp "$spool"
+
+echo
+echo ">> verifying"
+echo "--- CUPS queues ---"
+lpstat -p 2>/dev/null | grep -i "$(echo "$MODEL" | tr -d '-')\|brother" || echo "(no Brother queue found)"
+echo "--- SANE scanners ---"
+timeout 15 scanimage -L 2>&1 | grep -i brother || echo "(no Brother scanner detected)"
+echo
+echo "done. Test scanning with: simple-scan"
+echo "If you see two Brother CUPS queues (proprietary + driverless), keep the driverless one:"
+echo "  sudo lpadmin -x <proprietary-queue-name>"

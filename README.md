@@ -67,6 +67,7 @@ Terminal-based (TUI) tools for managing system settings and applications on i3 w
 | **Settings** | `settings` | Quick launcher for installed apps only |
 | **Settings Hub** | `settings-hub` | App store - browse, discover & install new apps |
 | **Printer Manager** | `printerctl` | TUI for CUPS: queue, cancel jobs, enable/disable, test page |
+| **Brother Installer** | `brother-driver-install` | One-shot installer for Brother LPR/CUPS + brscan5 drivers |
 
 ## Installation
 
@@ -80,6 +81,7 @@ mkdir -p ~/bin
 ln -sf "$(pwd)/settings" ~/bin/settings
 ln -sf "$(pwd)/settings-hub" ~/bin/settings-hub
 ln -sf "$(pwd)/printerctl" ~/bin/printerctl
+ln -sf "$(pwd)/brother-driver-install" ~/bin/brother-driver-install
 
 # Make sure ~/bin is in your PATH
 echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bashrc
@@ -128,6 +130,25 @@ App store interface for **browsing and installing** new tools.
 **Dependencies:** `dialog` and CUPS (`cups-client`).
 
 Also reachable from `settings` → *Printing & Scanning* → *printerctl*.
+
+## Brother Installer (`brother-driver-install`)
+
+One-shot installer that fetches Brother's official Linux Driver Install Tool and
+runs it non-interactively for a given model. Installs the proprietary printer
+driver (LPR + CUPS wrapper), `brscan5` scanner backend, and `brscan-skey`.
+
+```bash
+brother-driver-install DCP-L3560CDW    # explicit model
+brother-driver-install                 # auto-detect from USB
+```
+
+Defaults assume a USB-connected device (auto-detected Device URI, no test print).
+After install it verifies the CUPS queue and SANE scanner detection.
+
+On modern Ubuntu, `sane-airscan` (already shipped) usually picks up Brother MFPs
+driverlessly anyway — `brscan5` is installed as a fallback. If two CUPS queues
+appear (proprietary + driverless), the script suggests removing the proprietary
+one with `sudo lpadmin -x <name>`.
 
 ## Categories
 
